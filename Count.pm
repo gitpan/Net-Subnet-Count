@@ -8,7 +8,7 @@ use IP::Address;
 require Exporter;
 
 @ISA = qw();
-$VERSION = '1.00';
+$VERSION = '1.20';
 
 # Preloaded methods go here.
 
@@ -39,7 +39,7 @@ sub add {
     my $self = shift;
     my $subnet = shift;
     if (ref($_[0]) eq 'ARRAY') {
-	$self->_add_entry($subnet, shift);
+	$self->_add_entry($subnet, @{$_[0]});
     }
     else {
 	$self->_add_entry($subnet, @_);
@@ -88,6 +88,30 @@ sub count {
     }
 }
 
+sub valcount {
+    my $self = shift;
+  IP:
+    while (my $ip = shift) {
+	my $value = shift;
+	foreach my $r_pair (@{$self->{'cache'}}) {
+	    my ($subnet, $ip_net) = @{$r_pair};
+	    if ($ip_net->contains($ip)) { # Match
+		$self->{'count'}->{$subnet} += $value;
+		next IP;
+	    }
+	}
+	foreach my $subnet (keys %{$self->{'subnets'}}) {
+	    foreach my $ip_net (@{$self->{'subnets'}->{$subnet}}) {
+		if ($ip_net->contains($ip)) { # Match
+		    $self->_add_cache($subnet, $ip_net);
+		    $self->{'count'}->{$subnet} += $value;
+		    next IP;
+		}
+	    }
+	}
+    }
+}
+
 sub result {
     my $self = shift;
     my %res;
@@ -118,8 +142,13 @@ Net::Subnet::Count - Count hosts in named subnets
 
   $counter->cache(10);
 
-  $counter->count(new IP:Address("10.0.3.17"));
+  $counter->count(new IP::Address("10.0.3.17"));
   $counter->count(@array_of_ip_addresses);
+
+  $counter->valcount(new IP::Address("10.0.3.17"), 23);
+  @array_of_ipaddr_and_values = (new IP::Address("10.0.3.17"), 23,
+				new IP::Address("101.0.23.107"), 2);
+  $counter->valcount(@array_of_ipaddr_and_values);
 
   my $r_count = $counter->result;
 
@@ -156,6 +185,11 @@ above.
 Verifies if the C<IP::Address>es are contained in any of the given
 subnets. If this is the case, the corresponding totals are updated.
 
+=item C<-E<gt>valcount>
+
+The same as C<-E<gt>count> but the argument is an array consisting
+of C<IP::Address>es and value pairs.
+
 =item C<-E<gt>result>
 
 Returns a reference to a hash containing the respective totals for
@@ -184,7 +218,8 @@ size is returned.
 
 =head1 AUTHOR
 
-Luis E. Munoz <lem@cantv.net>
+Luis E. Munoz <lem@cantv.net>. Alvaro Carvajal <alvaro@cantv.net>
+contributed the valcount method.
 
 =head1 SEE ALSO
 

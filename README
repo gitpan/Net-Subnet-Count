@@ -30,8 +30,13 @@ SYNOPSIS
 
       $counter->cache(10);
 
-      $counter->count(new IP:Address("10.0.3.17"));
+      $counter->count(new IP::Address("10.0.3.17"));
       $counter->count(@array_of_ip_addresses);
+
+      $counter->valcount(new IP::Address("10.0.3.17"), 23);
+      @array_of_ipaddr_and_values = (new IP::Address("10.0.3.17"), 23,
+                                    new IP::Address("101.0.23.107"), 2);
+      $counter->valcount(@array_of_ipaddr_and_values);
 
       my $r_count = $counter->result;
 
@@ -63,6 +68,10 @@ DESCRIPTION
         Verifies if the `IP::Address'es are contained in any of the given
         subnets. If this is the case, the corresponding totals are updated.
 
+    `->valcount'
+        The same as `->count' but the argument is an array consisting of
+        `IP::Address'es and value pairs.
+
     `->result'
         Returns a reference to a hash containing the respective totals for
         each subnet group. The key to the hash is the subnet name given with
@@ -86,7 +95,8 @@ DESCRIPTION
         returned.
 
 AUTHOR
-    Luis E. Munoz <lem@cantv.net>
+    Luis E. Munoz <lem@cantv.net>. Alvaro Carvajal <alvaro@cantv.net>
+    contributed the valcount method.
 
 SEE ALSO
     perl(1), IP::Address(1).
